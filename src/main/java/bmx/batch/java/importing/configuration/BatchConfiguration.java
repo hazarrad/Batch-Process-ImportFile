@@ -19,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import bmx.batch.java.importing.listener.ImporterJobListener;
+import bmx.batch.java.importing.listener.MyItemWriteListener;
 import bmx.batch.java.importing.model.Customer;
 import bmx.batch.java.importing.utils.Utils;
 import jakarta.persistence.EntityManagerFactory;
@@ -59,20 +60,30 @@ public class BatchConfiguration {
 				.build();	
 	}
 
+	@Bean
+	public MyItemWriteListener myItemWriteListener() {
+		return new MyItemWriteListener();
+	}
+	
     @Bean
     public JpaItemWriter<Customer> writer(EntityManagerFactory entityManagerFactory) {
         return new JpaItemWriterBuilder<Customer>()
                 .entityManagerFactory(entityManagerFactory)
+                .usePersist(false) // Avoid merge
+
                 .build();
     }
     
     @Bean
     public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer,
                                 JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        log.info("Creating importerStep...");
+
         return new StepBuilder("importerStep", jobRepository)
                 .<Customer, Customer>chunk(50, transactionManager)
                 .reader(reader)
                 .writer(writer)
+                .listener(myItemWriteListener())
                 .allowStartIfComplete(true)
                 .build();
     }
