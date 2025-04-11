@@ -20,7 +20,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import bmx.batch.java.importing.listener.ImporterJobListener;
 import bmx.batch.java.importing.listener.MyItemWriteListener;
+import bmx.batch.java.importing.listener.MySkipListener;
 import bmx.batch.java.importing.model.Customer;
+import bmx.batch.java.importing.processor.MyItemProcessor;
 import bmx.batch.java.importing.utils.Utils;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -60,10 +62,6 @@ public class BatchConfiguration {
 				.build();	
 	}
 
-	@Bean
-	public MyItemWriteListener myItemWriteListener() {
-		return new MyItemWriteListener();
-	}
 	
     @Bean
     public JpaItemWriter<Customer> writer(EntityManagerFactory entityManagerFactory) {
@@ -74,17 +72,27 @@ public class BatchConfiguration {
                 .build();
     }
     
+	@Bean
+	public MySkipListener mySkipListener() {
+		return new MySkipListener();
+	}
+    
     @Bean
     public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer,
-                                JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    		JobRepository jobRepository, PlatformTransactionManager transactionManager,MyItemProcessor processor) {
         log.info("Creating importerStep...");
 
         return new StepBuilder("importerStep", jobRepository)
-                .<Customer, Customer>chunk(50, transactionManager)
+                .<Customer, Customer>chunk(200, transactionManager)
                 .reader(reader)
                 .writer(writer)
-                .listener(myItemWriteListener())
+                .processor(processor)
+                .listener(mySkipListener()) 
+                .listener(new MyItemWriteListener())
                 .allowStartIfComplete(true)
+                .faultTolerant()
+                .skip(IllegalArgumentException.class)
+                .skipLimit(1)
                 .build();
     }
     
