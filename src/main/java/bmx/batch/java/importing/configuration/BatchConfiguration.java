@@ -13,6 +13,7 @@ import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -27,83 +28,58 @@ import bmx.batch.java.importing.utils.Utils;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 
-//@EnableConfigurationProperties(BatchConfigProperties.class)
 @Configuration
 @EnableBatchProcessing
 @Slf4j
 public class BatchConfiguration {
 
+	@Autowired
+	private BatchConfigProperties bcp;
+
 	@Bean
 	public FlatFileItemReader<Customer> reader() {
 
-		return new FlatFileItemReaderBuilder<Customer>()
-				.name("importerFileReader")
-				.linesToSkip(1)
- 				.resource(new ClassPathResource("customers.csv"))
-				.delimited()
-				.delimiter(",")
-				.names("index", "customerId", "firstName", "lastName", "company",
-                        "city", "country", "phone1",
-                        "phone2", "email", "subscriptionDate")
+		return new FlatFileItemReaderBuilder<Customer>().name("importerFileReader").linesToSkip(1)
+				.resource(new ClassPathResource("customers.csv")).delimited().delimiter(",")
+				.names("index", "customerId", "firstName", "lastName", "company", "city", "country", "phone1", "phone2",
+						"email", "subscriptionDate")
 				.fieldSetMapper(fieldSet -> {
-                    return Customer.builder()
-                            .customerId(fieldSet.readString("customerId"))
-                            .firstName(fieldSet.readString("firstName"))
-                            .lastName(fieldSet.readString("lastName"))
-                            .company(fieldSet.readString("company"))
-                            .city(fieldSet.readString("city"))
-                            .country(fieldSet.readString("country"))
-                            .phone1(fieldSet.readString("phone1"))
-                            .phone2(fieldSet.readString("phone2"))
-                            .email(fieldSet.readString("email"))
-                            .subscriptionDate(Utils.parseDate(fieldSet.readString("subscriptionDate")))
-                            .build();
-                })
-				.build();	
+					return Customer.builder().customerId(fieldSet.readString("customerId"))
+							.firstName(fieldSet.readString("firstName")).lastName(fieldSet.readString("lastName"))
+							.company(fieldSet.readString("company")).city(fieldSet.readString("city"))
+							.country(fieldSet.readString("country")).phone1(fieldSet.readString("phone1"))
+							.phone2(fieldSet.readString("phone2")).email(fieldSet.readString("email"))
+							.subscriptionDate(Utils.parseDate(fieldSet.readString("subscriptionDate"))).build();
+				}).build();
 	}
 
-	
-    @Bean
-    public JpaItemWriter<Customer> writer(EntityManagerFactory entityManagerFactory) {
-        return new JpaItemWriterBuilder<Customer>()
-                .entityManagerFactory(entityManagerFactory)
-                .usePersist(false) // Avoid merge
+	@Bean
+	public JpaItemWriter<Customer> writer(EntityManagerFactory entityManagerFactory) {
+		return new JpaItemWriterBuilder<Customer>().entityManagerFactory(entityManagerFactory).usePersist(false) // Avoid
+																													// merge
+				.build();
+	}
 
-                .build();
-    }
-    
 	@Bean
 	public MySkipListener mySkipListener() {
 		return new MySkipListener();
 	}
-    
-    @Bean
-    public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer,
-    		JobRepository jobRepository, PlatformTransactionManager transactionManager,MyItemProcessor processor) {
-        log.info("Creating importerStep...");
 
-        return new StepBuilder("importerStep", jobRepository)
-                .<Customer, Customer>chunk(200, transactionManager)
-                .reader(reader)
-                .writer(writer)
-                .processor(processor)
-                .listener(mySkipListener()) 
-                .listener(new MyItemWriteListener())
-                .allowStartIfComplete(true)
-                .faultTolerant()
-                .skip(IllegalArgumentException.class)
-                .skipLimit(1)
-                .build();
-    }
-    
-    @Bean
-    public Job importerJob(Step importerStep, JobRepository jobRepository, ImporterJobListener listener) {
-        return new JobBuilder("importerJob", jobRepository)
-                .incrementer(new RunIdIncrementer())
-                .listener(listener)
-                .flow(importerStep)
-                .end()
-                .build();
-    }
+	@Bean
+	public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer, JobRepository jobRepository,
+			PlatformTransactionManager transactionManager, MyItemProcessor processor) {
+		log.info("Creating importerStep...");
+
+		return new StepBuilder("importerStep", jobRepository)
+				.<Customer, Customer>chunk(bcp.getChunksize(), transactionManager).reader(reader).processor(processor)
+				.writer(writer).faultTolerant().skip(IllegalArgumentException.class).skipLimit(bcp.getSkipLimit())
+				.listener(mySkipListener()).listener(new MyItemWriteListener()).allowStartIfComplete(true).build();
+	}
+
+	@Bean
+	public Job importerJob(Step importerStep, JobRepository jobRepository, ImporterJobListener listener) {
+		return new JobBuilder("importerJob", jobRepository).incrementer(new RunIdIncrementer()).listener(listener)
+				.flow(importerStep).end().build();
+	}
 
 }

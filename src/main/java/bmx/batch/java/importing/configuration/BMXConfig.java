@@ -13,8 +13,8 @@ import lombok.Setter;
 @Setter
 @Validated
 @Configuration
-@ConfigurationProperties(prefix = "export")
-public class ExportConfig {
+@ConfigurationProperties(prefix = "bmx")
+public class BMXConfig {
 
 	private String resourcesFolder;
 	private String bucketName;

@@ -26,7 +26,7 @@ public class ImporterJobListener implements JobExecutionListener {
 		} else {
 
 			log.error("Job failed -> The job failed at " + jobExecution.getEndTime());
-			log.info("Job {} failed", jobExecution.getJobInstance().getJobName());
+			log.error("Job {} failed", jobExecution.getJobInstance().getJobName());
 		}
 	}
 }

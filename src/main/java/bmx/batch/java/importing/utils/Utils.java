@@ -14,14 +14,10 @@ public class Utils {
 				DateTimeFormatter.ofPattern("MM/dd/yyyy"), DateTimeFormatter.ofPattern("yyyy-MM-dd") };
 
 		for (DateTimeFormatter formatter : formatters) {
-			try {
-				return LocalDate.parse(dateStr, formatter);
-			} catch (DateTimeParseException e) {
-				// Ignore and try the next format
-			}
+			return LocalDate.parse(dateStr, formatter);
+
 		}
 
-		// If all formats fail, throw an exception or handle it as needed
 		throw new DateTimeParseException("Unable to parse the date: " + dateStr, dateStr, 0);
 	}
 

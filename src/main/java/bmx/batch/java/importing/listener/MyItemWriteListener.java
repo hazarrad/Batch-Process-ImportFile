@@ -21,7 +21,7 @@ public class MyItemWriteListener implements ItemWriteListener<Customer> {
 	@Override
 	public void beforeWrite(Chunk<? extends Customer> items) {
 		chunkCounter++; // Increment the chunk counter
-		log.info("Starting to process chunk # {}", chunkCounter + " with " + items.size() + " items.");
+		log.info("Starting to process chunk #{}", chunkCounter + " with " + items.size() + " items.");
 	}
 
 	@Override
