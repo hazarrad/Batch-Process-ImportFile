@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: Batch-Process-ImportFile
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/batchimport
+    username: xxxxxxx
+    password: xxxxxxx
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+batch:
+  chunksize: 200
+  skipLimit: 50
+  corepool: 32
+  maxpool: 32
+  queuelimit: 500
+          
+bmx:
+  resourcesFolder: /app/resources/
+  bucketName: exportbucks
+  key: \gcpkey.json
+  fileName: customers.csv
+  filePath: files/
+  
+logging:
+  level:
+    root: INFO
+    bmx.batch.java.importing.listener.MySkipListener: INFO

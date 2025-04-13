@@ -20,5 +20,7 @@ public class BMXConfig {
 	private String bucketName;
 	private String projectId;
 	private String key;
+	private String fileName;
+	private String filePath;
 
 }

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import bmx.batch.java.importing.listener.ImporterJobListener;
@@ -24,6 +25,7 @@ import bmx.batch.java.importing.listener.MyItemWriteListener;
 import bmx.batch.java.importing.listener.MySkipListener;
 import bmx.batch.java.importing.model.Customer;
 import bmx.batch.java.importing.processor.MyItemProcessor;
+import bmx.batch.java.importing.service.GoogleCloudStorageService;
 import bmx.batch.java.importing.utils.Utils;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -35,12 +37,20 @@ public class BatchConfiguration {
 
 	@Autowired
 	private BatchConfigProperties bcp;
+	
+	@Autowired
+	private GoogleCloudStorageService gcsService;
 
 	@Bean
 	public FlatFileItemReader<Customer> reader() {
 
+	    log.info("hey i staretd reading {)");
+		
+	    Resource resource = gcsService.loadFileAsResource();
+	    log.info("resource {)",resource.getFilename());
+
 		return new FlatFileItemReaderBuilder<Customer>().name("importerFileReader").linesToSkip(1)
-				.resource(new ClassPathResource("customers.csv")).delimited().delimiter(",")
+				.resource(resource).delimited().delimiter(",")
 				.names("index", "customerId", "firstName", "lastName", "company", "city", "country", "phone1", "phone2",
 						"email", "subscriptionDate")
 				.fieldSetMapper(fieldSet -> {
