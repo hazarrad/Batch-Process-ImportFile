@@ -2,6 +2,9 @@
 
 This project is a **Spring Batch-based data import solution** designed to read Excel files from a **Google Cloud Storage (GCS) bucket**, process the data, and store it into a **PostgreSQL** database. It is optimized for large-scale batch operations, with built-in support for chunk processing, concurrency, fault tolerance, and job restartability.
 
+## Architecture
+The following picture illustrates the architecture of this batch process
+![importFile](https://github.com/user-attachments/assets/e8b1883a-8c2e-4691-bcbf-630bf22a669c)
 
 ### 🔄 How It Works
 
