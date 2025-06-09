@@ -4,7 +4,7 @@ This project is a **Spring Batch-based data import solution** designed to read E
 
 ## Architecture
 The following picture illustrates the architecture of this batch process
-![importFile](https://github.com/user-attachments/assets/e8b1883a-8c2e-4691-bcbf-630bf22a669c)
+![importFile (1)](https://github.com/user-attachments/assets/c866b313-cc9a-4933-b560-73c09906b83c)
 
 ### 🔄 How It Works
 
