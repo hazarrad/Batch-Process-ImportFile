@@ -35,61 +35,61 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BatchConfiguration {
 
-	@Autowired
-	private BatchConfigProperties bcp;
-	
-	@Autowired
-	private GoogleCloudStorageService gcsService;
+    @Autowired
+    private BatchConfigProperties bcp;
 
-	@Bean
-	public FlatFileItemReader<Customer> reader() {
+    @Autowired
+    private GoogleCloudStorageService gcsService;
 
-	    log.info("hey i staretd reading {)");
-		
-	    Resource resource = gcsService.loadFileAsResource();
-	    log.info("resource {)",resource.getFilename());
+    @Bean
+    public FlatFileItemReader<Customer> reader() {
 
-		return new FlatFileItemReaderBuilder<Customer>().name("importerFileReader").linesToSkip(1)
-				.resource(resource).delimited().delimiter(",")
-				.names("index", "customerId", "firstName", "lastName", "company", "city", "country", "phone1", "phone2",
-						"email", "subscriptionDate")
-				.fieldSetMapper(fieldSet -> {
-					return Customer.builder().customerId(fieldSet.readString("customerId"))
-							.firstName(fieldSet.readString("firstName")).lastName(fieldSet.readString("lastName"))
-							.company(fieldSet.readString("company")).city(fieldSet.readString("city"))
-							.country(fieldSet.readString("country")).phone1(fieldSet.readString("phone1"))
-							.phone2(fieldSet.readString("phone2")).email(fieldSet.readString("email"))
-							.subscriptionDate(Utils.parseDate(fieldSet.readString("subscriptionDate"))).build();
-				}).build();
-	}
+        log.info("reading started..");
 
-	@Bean
-	public JpaItemWriter<Customer> writer(EntityManagerFactory entityManagerFactory) {
-		return new JpaItemWriterBuilder<Customer>().entityManagerFactory(entityManagerFactory).usePersist(false) // Avoid
-																													// merge
-				.build();
-	}
+        Resource resource = gcsService.loadFileAsResource();
+        log.info("resource {}", resource.getFilename());
 
-	@Bean
-	public MySkipListener mySkipListener() {
-		return new MySkipListener();
-	}
+        return new FlatFileItemReaderBuilder<Customer>().name("importerFileReader").linesToSkip(1)
+                .resource(resource).delimited().delimiter(",")
+                .names("index", "customerId", "firstName", "lastName", "company", "city", "country", "phone1", "phone2",
+                        "email", "subscriptionDate")
+                .fieldSetMapper(fieldSet -> {
+                    return Customer.builder().customerId(fieldSet.readString("customerId"))
+                            .firstName(fieldSet.readString("firstName")).lastName(fieldSet.readString("lastName"))
+                            .company(fieldSet.readString("company")).city(fieldSet.readString("city"))
+                            .country(fieldSet.readString("country")).phone1(fieldSet.readString("phone1"))
+                            .phone2(fieldSet.readString("phone2")).email(fieldSet.readString("email"))
+                            .subscriptionDate(Utils.parseDate(fieldSet.readString("subscriptionDate"))).build();
+                }).build();
+    }
 
-	@Bean
-	public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer, JobRepository jobRepository,
-			PlatformTransactionManager transactionManager, MyItemProcessor processor) {
-		log.info("Creating importerStep...");
+    @Bean
+    public JpaItemWriter<Customer> writer(EntityManagerFactory entityManagerFactory) {
+        log.info("writing started..");
+        return new JpaItemWriterBuilder<Customer>().entityManagerFactory(entityManagerFactory).usePersist(false).build();
+    }
 
-		return new StepBuilder("importerStep", jobRepository)
-				.<Customer, Customer>chunk(bcp.getChunksize(), transactionManager).reader(reader).processor(processor)
-				.writer(writer).faultTolerant().skip(IllegalArgumentException.class).skipLimit(bcp.getSkipLimit())
-				.listener(mySkipListener()).listener(new MyItemWriteListener()).allowStartIfComplete(true).build();
-	}
+    @Bean
+    public MySkipListener mySkipListener() {
+        return new MySkipListener();
+    }
 
-	@Bean
-	public Job importerJob(Step importerStep, JobRepository jobRepository, ImporterJobListener listener) {
-		return new JobBuilder("importerJob", jobRepository).incrementer(new RunIdIncrementer()).listener(listener)
-				.flow(importerStep).end().build();
-	}
+    @Bean
+    public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer, JobRepository jobRepository,
+                             PlatformTransactionManager transactionManager, MyItemProcessor processor) {
+        log.info("Creating importerStep...");
+
+        return new StepBuilder("importerStep", jobRepository)
+                .<Customer, Customer>chunk(bcp.getChunksize(), transactionManager).reader(reader).processor(processor)
+                .writer(writer).faultTolerant().skip(IllegalArgumentException.class).skipLimit(bcp.getSkipLimit())
+                .listener(mySkipListener()).listener(new MyItemWriteListener()).allowStartIfComplete(true).build();
+    }
+
+    @Bean
+    public Job importerJob(Step importerStep, JobRepository jobRepository, ImporterJobListener listener) {
+        log.info("Job started...");
+        return new JobBuilder("importerJob", jobRepository).incrementer(new RunIdIncrementer()).listener(listener)
+                .flow(importerStep).end().build();
+    }
 
 }

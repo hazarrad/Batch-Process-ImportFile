@@ -27,6 +27,7 @@ public class ApplicationEvent {
 
     @EventListener(ApplicationReadyEvent.class)
     public void applicationEvent() throws JobExecutionException {
+        log.info("Event started..");
         try {
             // Create unique job parameters based on time or other logic
             JobParameters jobParameters = new JobParametersBuilder()
