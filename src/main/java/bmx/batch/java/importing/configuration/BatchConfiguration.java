@@ -1,5 +1,6 @@
 package bmx.batch.java.importing.configuration;
 
+import bmx.batch.java.importing.listener.MyChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -73,6 +74,10 @@ public class BatchConfiguration {
     public MySkipListener mySkipListener() {
         return new MySkipListener();
     }
+    @Bean
+    public MyChunkListener myChunkListener() {
+        return new MyChunkListener();
+    }
 
     @Bean
     public Step importerStep(ItemReader<Customer> reader, ItemWriter<Customer> writer, JobRepository jobRepository,
@@ -82,7 +87,7 @@ public class BatchConfiguration {
         return new StepBuilder("importerStep", jobRepository)
                 .<Customer, Customer>chunk(bcp.getChunksize(), transactionManager).reader(reader).processor(processor)
                 .writer(writer).faultTolerant().skip(IllegalArgumentException.class).skipLimit(bcp.getSkipLimit())
-                .listener(mySkipListener()).listener(new MyItemWriteListener()).allowStartIfComplete(true).build();
+                .listener(mySkipListener()).listener(myChunkListener()).listener(new MyItemWriteListener()).allowStartIfComplete(true).build();
     }
 
     @Bean
