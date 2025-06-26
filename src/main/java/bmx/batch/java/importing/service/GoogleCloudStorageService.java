@@ -46,7 +46,7 @@ public class GoogleCloudStorageService {
 					new FileInputStream(new ClassPathResource(bmxConfig.getKey()).getFile().getAbsolutePath()));
 
 			// Create a Storage client with the specified credentials
-			log.info("Init storage: {} ");
+			log.info("init storage..");
 			storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
 			bucket = storage.get(bmxConfig.getBucketName());
 

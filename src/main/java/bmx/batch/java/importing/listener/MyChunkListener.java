@@ -19,7 +19,7 @@ public class MyChunkListener implements ChunkListener {
 
     @Override
     public void beforeChunk(ChunkContext context) {
-        chunkCounter++;
-        log.info("Starting chunk #{}", chunkCounter);
+//        chunkCounter++;
+//        log.info("Starting chunk #{}", chunkCounter);
     }
 }

@@ -74,6 +74,7 @@ public class BatchConfiguration {
     public MySkipListener mySkipListener() {
         return new MySkipListener();
     }
+
     @Bean
     public MyChunkListener myChunkListener() {
         return new MyChunkListener();
