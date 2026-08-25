@@ -33,7 +33,7 @@ public class GoogleCloudStorageService {
 	private Bucket bucket;
 
 	@PostConstruct
-	public void init() {
+	public void  init() {
 		try {
 			log.info("Initializing GCS with bucket: {}", bmxConfig.getBucketName());
 			Path resourcesPath = Paths.get(bmxConfig.getResourcesFolder());
